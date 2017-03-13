@@ -29,7 +29,8 @@ public class Node {
 	//
 
 	public static boolean[][] walls = new boolean[MAX_ROW][MAX_COL];
-	public char[][] boxes = new char[MAX_ROW][MAX_COL];
+	public Hashtable boxes = new Hashtable();
+	//public char[][] boxes = new char[MAX_ROW][MAX_COL];
 	public static char[][] goals = new char[MAX_ROW][MAX_COL];
 
 	public Node parent;
@@ -60,7 +61,8 @@ public class Node {
 		for (int row = 1; row < MAX_ROW - 1; row++) {
 			for (int col = 1; col < MAX_COL - 1; col++) {
 				char g = goals[row][col];
-				char b = Character.toLowerCase(boxes[row][col]);
+				//char b = Character.toLowerCase(boxes[row][col]);
+				char b = Character.toLowerCase(boxes.get(new Pair<Integer, Integer>(row, col)));
 				if (g > 0 && b != g) {
 					return false;
 				}
@@ -96,8 +98,15 @@ public class Node {
 						n.action = c;
 						n.agentRow = newAgentRow;
 						n.agentCol = newAgentCol;
+						/*
 						n.boxes[newBoxRow][newBoxCol] = this.boxes[newAgentRow][newAgentCol];
 						n.boxes[newAgentRow][newAgentCol] = 0;
+						*/
+						Pair<Integer, Integer> oldBoxCoord = new Pair<Integer, Integer>(newAgentRow, newAgentCol);
+						char boxChar = n.boxes.get(oldBoxCoord);
+						Pair<Integer, Integer> newBoxCoord = new Pair<Integer, Integer>(newBoxRow, newBoxCol);
+						n.boxes.remove(oldBoxCoord);
+						n.boxes.put(oldBoxCoord, boxChar);
 						expandedNodes.add(n);
 					}
 				}
