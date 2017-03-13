@@ -63,7 +63,9 @@ public class SearchClient {
 					this.initialState.agentRow = i;
 					this.initialState.agentCol = j;
 				} else if ('A' <= chr && chr <= 'Z') { // Box.
-					this.initialState.boxes[i][j] = chr;
+					Pair<Integer, Integer> boxCoord = new Pair<Integer, Integer>(i,j);
+					this.initialState.boxes.put(boxCoord, chr);
+					//this.initialState.boxes.[i][j] = chr;
 				} else if ('a' <= chr && chr <= 'z') { // Goal.
 					this.initialState.goals[i][j] = chr;
 				} else if (chr == ' ') {
@@ -82,7 +84,8 @@ public class SearchClient {
 
 		int iterations = 0;
 		while (true) {
-            if (iterations == 1000) {
+			// reduce output rate
+            if (iterations == 100000) {
 				System.err.println(strategy.searchStatus());
 				iterations = 0;
 			}
