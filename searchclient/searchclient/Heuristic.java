@@ -9,8 +9,39 @@ public abstract class Heuristic implements Comparator<Node> {
 		// Here's a chance to pre-process the static parts of the level.
 	}
 
+	/*
+	Heuristic: total Manhattan distances of all boxes
+	 */
 	public int h(Node n) {
-		throw new NotImplementedException();
+		int dist = 0;
+		for (int row  = 0; row < Node.MAX_ROW; row++) {
+			for (int col = 0; col < Node.MAX_COL; col++) {
+				char b = n.boxes[row][col];
+			    if (b > 0) {
+			    	// find the row and column indexes of the goal corresponding to the box
+			    	int[] goalIndex = correspondGoal(b);
+			    	// add Manhattan distance of the box to the total distance
+					dist += (Math.abs(goalIndex[0]-row) + Math.abs(goalIndex[1]-col));
+				}
+			}
+		}
+		return dist;
+	}
+
+	protected int[] correspondGoal(char box) {
+		int[] goalIndex = new int[2];
+		char boxChar = Character.toLowerCase(box);
+		for (int r = 0; r < Node.MAX_ROW; r++) {
+			for (int c = 0; c < Node.MAX_COL; c++) {
+				char g = Node.goals[r][c];
+				if (g > 0 && boxChar == g) {
+					goalIndex[0] = r;
+					goalIndex[1] = c;
+					break;
+				}
+			}
+		}
+		return goalIndex;
 	}
 
 	public abstract int f(Node n);

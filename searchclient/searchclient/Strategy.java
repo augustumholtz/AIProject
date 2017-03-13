@@ -2,6 +2,7 @@ package searchclient;
 
 import java.util.ArrayDeque;
 import java.util.HashSet;
+import java.util.PriorityQueue;
 
 import searchclient.Memory;
 import searchclient.NotImplementedException;
@@ -145,7 +146,7 @@ public abstract class Strategy {
 		public StrategyBestFirst(Heuristic h) {
 			super();
 			this.heuristic = h;
-			frontier = new PriorityQueue<Node>(heuristic);
+			frontier = new PriorityQueue<Node>(5, heuristic);
 			frontierSet = new HashSet<Node>();
 		}
 

@@ -97,7 +97,7 @@ public class SearchClient {
 				return leafNode.extractPlan();
 			}
 
-			strategy.addToEgxplored(leafNode);
+			strategy.addToExplored(leafNode);
 			for (Node n : leafNode.getExpandedNodes()) { // The list of expanded nodes is shuffled randomly; see Node.java.
 				if (!strategy.isExplored(n) && !strategy.inFrontier(n)) {
 					strategy.addToFrontier(n);
