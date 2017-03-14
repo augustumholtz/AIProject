@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Random;
+import java.util.HashMap;
 
 import searchclient.Command.Type;
 
@@ -29,7 +30,7 @@ public class Node {
 	//
 
 	public static boolean[][] walls = new boolean[MAX_ROW][MAX_COL];
-	public Hashtable boxes = new Hashtable();
+	public HashMap<Pair, Character> boxes = new HashMap<Pair, Character>();
 	//public char[][] boxes = new char[MAX_ROW][MAX_COL];
 	public static char[][] goals = new char[MAX_ROW][MAX_COL];
 
@@ -62,7 +63,8 @@ public class Node {
 			for (int col = 1; col < MAX_COL - 1; col++) {
 				char g = goals[row][col];
 				//char b = Character.toLowerCase(boxes[row][col]);
-				char b = Character.toLowerCase(boxes.get(new Pair<Integer, Integer>(row, col)));
+                if (!boxes.containsKey(new Pair(row,col))) return false;
+				char b = Character.toLowerCase((Character)(boxes.get(new Pair(row, col))));
 				if (g > 0 && b != g) {
 					return false;
 				}
@@ -102,11 +104,11 @@ public class Node {
 						n.boxes[newBoxRow][newBoxCol] = this.boxes[newAgentRow][newAgentCol];
 						n.boxes[newAgentRow][newAgentCol] = 0;
 						*/
-						Pair<Integer, Integer> oldBoxCoord = new Pair<Integer, Integer>(newAgentRow, newAgentCol);
-						char boxChar = n.boxes.get(oldBoxCoord);
-						Pair<Integer, Integer> newBoxCoord = new Pair<Integer, Integer>(newBoxRow, newBoxCol);
+						Pair oldBoxCoord = new Pair(newAgentRow, newAgentCol);
+						char boxChar = (Character)(n.boxes.get(oldBoxCoord));
+						Pair newBoxCoord = new Pair(newBoxRow, newBoxCol);
 						n.boxes.remove(oldBoxCoord);
-						n.boxes.put(oldBoxCoord, boxChar);
+						n.boxes.put(newBoxCoord, boxChar);
 						expandedNodes.add(n);
 					}
 				}
@@ -121,8 +123,15 @@ public class Node {
 						n.action = c;
 						n.agentRow = newAgentRow;
 						n.agentCol = newAgentCol;
+						/*
 						n.boxes[this.agentRow][this.agentCol] = this.boxes[boxRow][boxCol];
 						n.boxes[boxRow][boxCol] = 0;
+						*/
+						Pair oldBoxCoord = new Pair(boxRow, boxCol);
+						char boxChar = (Character)(n.boxes.get(oldBoxCoord));
+						Pair newBoxCoord = new Pair(this.agentRow, this.agentCol);
+						n.boxes.remove(oldBoxCoord);
+						n.boxes.put(newBoxCoord, boxChar);
 						expandedNodes.add(n);
 					}
 				}
@@ -133,18 +142,20 @@ public class Node {
 	}
 
 	private boolean cellIsFree(int row, int col) {
-		return !this.walls[row][col] && this.boxes[row][col] == 0;
+		return !this.walls[row][col] && !this.boxes.containsKey(new Pair(row,col));
 	}
 
 	private boolean boxAt(int row, int col) {
-		return this.boxes[row][col] > 0;
+		Pair boxCoord = new Pair(row, col);
+		return this.boxes.containsKey(boxCoord);
 	}
 
 	private Node ChildNode() {
 		Node copy = new Node(this);
 		for (int row = 0; row < MAX_ROW; row++) {
 			System.arraycopy(this.walls[row], 0, copy.walls[row], 0, MAX_COL);
-			System.arraycopy(this.boxes[row], 0, copy.boxes[row], 0, MAX_COL);
+			copy.boxes.putAll(this.boxes);
+			//System.arraycopy(this.boxes[row], 0, copy.boxes[row], 0, MAX_COL);
 			System.arraycopy(this.goals[row], 0, copy.goals[row], 0, MAX_COL);
 		}
 		return copy;
@@ -167,7 +178,8 @@ public class Node {
 			int result = 1;
 			result = prime * result + this.agentCol;
 			result = prime * result + this.agentRow;
-			result = prime * result + Arrays.deepHashCode(this.boxes);
+			//result = prime * result + Arrays.deepHashCode(this.boxes);
+			result = prime * result + this.boxes.size();
 			result = prime * result + Arrays.deepHashCode(this.goals);
 			result = prime * result + Arrays.deepHashCode(this.walls);
 			this._hash = result;
@@ -186,7 +198,7 @@ public class Node {
 		Node other = (Node) obj;
 		if (this.agentRow != other.agentRow || this.agentCol != other.agentCol)
 			return false;
-		if (!Arrays.deepEquals(this.boxes, other.boxes))
+		if (!this.boxes.equals(other.boxes))
 			return false;
 		if (!Arrays.deepEquals(this.goals, other.goals))
 			return false;
@@ -203,8 +215,8 @@ public class Node {
 				break;
 			}
 			for (int col = 0; col < MAX_COL; col++) {
-				if (this.boxes[row][col] > 0) {
-					s.append(this.boxes[row][col]);
+				if (this.boxes.containsKey(new Pair(row, col))) {
+					s.append(this.boxes.get(new Pair(row, col)));
 				} else if (this.goals[row][col] > 0) {
 					s.append(this.goals[row][col]);
 				} else if (this.walls[row][col]) {

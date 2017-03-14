@@ -47,7 +47,7 @@ public class SearchClient {
 		this.initialState.MAX_COL = maxCol;
 		this.initialState.walls = new boolean[row][maxCol];
 		this.initialState.goals = new char[row][maxCol];
-		this.initialState.boxes = new char[row][maxCol];
+		//this.initialState.boxes = new char[row][maxCol];
 		
 		for (int i = 0; i < level.size(); ++i) {
 			for (int j = 0; j < level.get(i).size(); ++j) {
@@ -63,7 +63,7 @@ public class SearchClient {
 					this.initialState.agentRow = i;
 					this.initialState.agentCol = j;
 				} else if ('A' <= chr && chr <= 'Z') { // Box.
-					Pair<Integer, Integer> boxCoord = new Pair<Integer, Integer>(i,j);
+					Pair boxCoord = new Pair(i,j);
 					this.initialState.boxes.put(boxCoord, chr);
 					//this.initialState.boxes.[i][j] = chr;
 				} else if ('a' <= chr && chr <= 'z') { // Goal.
@@ -84,8 +84,7 @@ public class SearchClient {
 
 		int iterations = 0;
 		while (true) {
-			// reduce output rate
-            if (iterations == 100000) {
+            if (iterations == 10) {
 				System.err.println(strategy.searchStatus());
 				iterations = 0;
 			}
