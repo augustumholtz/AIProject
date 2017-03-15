@@ -82,7 +82,7 @@ public class SearchClient {
 
 		int iterations = 0;
 		while (true) {
-            if (iterations == 1000) {
+            if (iterations == 500000) {
 				System.err.println(strategy.searchStatus());
 				iterations = 0;
 			}

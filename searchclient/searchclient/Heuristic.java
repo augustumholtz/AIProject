@@ -1,12 +1,67 @@
 package searchclient;
 
 import java.util.Comparator;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import searchclient.NotImplementedException;
 
 public abstract class Heuristic implements Comparator<Node> {
+	public Distance[][] distances;
 	public Heuristic(Node initialState) {
-		// Here's a chance to pre-process the static parts of the level.
+		distances = new Distance[initialState.MAX_ROW][initialState.MAX_COL];
+        // get list of goals for Distance
+        for (int r = 0; r < initialState.MAX_ROW; ++r) {
+        	for (int c = 0; c < initialState.MAX_COL; ++c) {
+        		if (initialState.goals[r][c] > 0) {
+        			Goal goal = new Goal(initialState.goals[r][c], r, c);
+        			Distance.goalList.add(goal);
+				}
+			}
+		}
+
+		// calculate Manhattan distance for each cell in the level
+		for (int r = 0; r < initialState.MAX_ROW; ++r) {
+        	for (int c = 0; c < initialState.MAX_COL; ++c) {
+        		distances[r][c] = new Distance(r,c);
+			}
+		}
+	}
+	private static class Distance {
+		public static ArrayList<Goal> goalList = new ArrayList<Goal>();
+		int row, col;
+		private HashMap<Character, Integer> manhatDist = new HashMap<Character, Integer>();
+		public Distance(int row, int col) {
+			for (Goal goal : goalList) {
+				int dist = Math.abs(goal.getRow()-row) + Math.abs(goal.getCol()-col);
+				manhatDist.put(goal.getLetter(),dist);
+			}
+		}
+
+		public int getManhatDistance(char letter) {
+			return manhatDist.get(letter);
+		}
+	}
+	private class Goal {
+		char letter;
+		int row, col;
+		public Goal(char l, int r, int c) {
+			letter = l;
+			row = r;
+			col = c;
+		}
+
+		public char getLetter() {
+			return letter;
+		}
+
+		public int getRow() {
+			return row;
+		}
+
+		public int getCol() {
+			return col;
+		}
 	}
 
 	/*
@@ -18,30 +73,11 @@ public abstract class Heuristic implements Comparator<Node> {
 			for (int col = 0; col < Node.MAX_COL; col++) {
 				char b = n.boxes[row][col];
 			    if (b > 0) {
-			    	// find the row and column indexes of the goal corresponding to the box
-			    	int[] goalIndex = correspondGoal(b);
-			    	// add Manhattan distance of the box to the total distance
-					dist += (Math.abs(goalIndex[0]-row) + Math.abs(goalIndex[1]-col));
+			        dist += distances[row][col].getManhatDistance(Character.toLowerCase(b));
 				}
 			}
 		}
 		return dist;
-	}
-
-	protected int[] correspondGoal(char box) {
-		int[] goalIndex = new int[2];
-		char boxChar = Character.toLowerCase(box);
-		for (int r = 0; r < Node.MAX_ROW; r++) {
-			for (int c = 0; c < Node.MAX_COL; c++) {
-				char g = Node.goals[r][c];
-				if (g > 0 && boxChar == g) {
-					goalIndex[0] = r;
-					goalIndex[1] = c;
-					break;
-				}
-			}
-		}
-		return goalIndex;
 	}
 
 	public abstract int f(Node n);
