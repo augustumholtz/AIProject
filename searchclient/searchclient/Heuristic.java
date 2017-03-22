@@ -8,17 +8,24 @@ import searchclient.NotImplementedException;
 
 public abstract class Heuristic implements Comparator<Node> {
 	public Distance[][] distances;
+	public int[][] cellWeight;
+
 	public Heuristic(Node initialState) {
 		distances = new Distance[initialState.MAX_ROW][initialState.MAX_COL];
+		cellWeight = new int[initialState.MAX_ROW][initialState.MAX_COL];
         // get list of goals for Distance
         for (int r = 0; r < initialState.MAX_ROW; ++r) {
         	for (int c = 0; c < initialState.MAX_COL; ++c) {
+        		// evaluate values of a cell based on how many walls surround its 3x3 square
+				cellWeight[r][c] = cellWeightOnWall(initialState, r, c);
+
         		if (initialState.goals[r][c] > 0) {
         			Goal goal = new Goal(initialState.goals[r][c], r, c);
         			Distance.goalList.add(goal);
 				}
 			}
 		}
+
 
 		// calculate Manhattan distance for each cell in the level
 		for (int r = 0; r < initialState.MAX_ROW; ++r) {
@@ -27,6 +34,31 @@ public abstract class Heuristic implements Comparator<Node> {
 			}
 		}
 	}
+
+	public int cellWeightOnWall(Node initialState, int row, int col) {
+		boolean[][] walls = initialState.walls;
+		int weight = 0;
+		int startR = row - 1;
+		if (startR < 0)
+			startR = row;
+		int endR = row + 1;
+		if (endR == initialState.MAX_ROW)
+			endR = row;
+		int startC = col - 1;
+		if (startC < 0)
+			startC = col;
+		int endC = col + 1;
+		if (endC == initialState.MAX_COL)
+			endC = col;
+		for (int r = startR; r <= endR; r++) {
+			for (int c = startC; c <= endC; c++) {
+				if (walls[r][c])
+				    weight++;
+			}
+		}
+		return weight;
+	}
+
 	private static class Distance {
 		public static ArrayList<Goal> goalList = new ArrayList<Goal>();
 		int row, col;
@@ -73,7 +105,7 @@ public abstract class Heuristic implements Comparator<Node> {
 			for (int col = 0; col < Node.MAX_COL; col++) {
 				char b = n.boxes[row][col];
 			    if (b > 0) {
-			        dist += distances[row][col].getManhatDistance(Character.toLowerCase(b));
+			        dist += (distances[row][col].getManhatDistance(Character.toLowerCase(b)) + cellWeight[row][col]);
 				}
 			}
 		}
@@ -137,4 +169,5 @@ public abstract class Heuristic implements Comparator<Node> {
 			return "Greedy evaluation";
 		}
 	}
+
 }
