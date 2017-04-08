@@ -32,7 +32,6 @@ public class SearchClient {
 			for (int col = 0; col < line.length(); col++) {
 				char chr = line.charAt(col);
 				level.get(row).add(chr); //
-				
 			}
 			if (line.length() > maxCol) {
 				maxCol = line.length();
@@ -40,15 +39,13 @@ public class SearchClient {
 			line = serverMessages.readLine();
 			row++;
 		}
-		
-		row = row + 3;
-		maxCol = maxCol + 3;
+
 		this.initialState.MAX_ROW = row;
 		this.initialState.MAX_COL = maxCol;
 		this.initialState.walls = new boolean[row][maxCol];
 		this.initialState.goals = new char[row][maxCol];
 		this.initialState.boxes = new char[row][maxCol];
-		
+
 		for (int i = 0; i < level.size(); ++i) {
 			for (int j = 0; j < level.get(i).size(); ++j) {
 				char chr = level.get(i).get(j);
@@ -64,8 +61,11 @@ public class SearchClient {
 					this.initialState.agentCol = j;
 				} else if ('A' <= chr && chr <= 'Z') { // Box.
 					this.initialState.boxes[i][j] = chr;
+					//this.initialState.boxList.add(new Box(chr, i, j));
 				} else if ('a' <= chr && chr <= 'z') { // Goal.
 					this.initialState.goals[i][j] = chr;
+					Goal goal = new Goal(chr, i, j);
+					this.initialState.goalList.add(goal);
 				} else if (chr == ' ') {
 					// Free space.
 				} else {

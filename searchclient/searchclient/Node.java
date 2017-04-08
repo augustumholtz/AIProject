@@ -31,6 +31,8 @@ public class Node {
 	public static boolean[][] walls = new boolean[MAX_ROW][MAX_COL];
 	public char[][] boxes = new char[MAX_ROW][MAX_COL];
 	public static char[][] goals = new char[MAX_ROW][MAX_COL];
+	public static ArrayList<Goal> goalList = new ArrayList<Goal>();
+	//public static ArrayList<Box> boxList = new ArrayList<Box>();
 
 	public Node parent;
 	public Command action;

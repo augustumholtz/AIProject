@@ -7,106 +7,94 @@ import java.util.HashMap;
 import searchclient.NotImplementedException;
 
 public abstract class Heuristic implements Comparator<Node> {
+	public ArrayList<Goal> goals;
 	public Distance[][] distances;
-	public int[][] cellWeight;
+	public boolean isSoko3;
 
 	public Heuristic(Node initialState) {
+		goals = initialState.goalList;
 		distances = new Distance[initialState.MAX_ROW][initialState.MAX_COL];
-		cellWeight = new int[initialState.MAX_ROW][initialState.MAX_COL];
-        // get list of goals for Distance
-        for (int r = 0; r < initialState.MAX_ROW; ++r) {
-        	for (int c = 0; c < initialState.MAX_COL; ++c) {
-        		// evaluate values of a cell based on how many walls surround its 3x3 square
-				cellWeight[r][c] = cellWeightOnWall(initialState, r, c);
 
-        		if (initialState.goals[r][c] > 0) {
-        			Goal goal = new Goal(initialState.goals[r][c], r, c);
-        			Distance.goalList.add(goal);
-				}
-			}
-		}
-
+		int numBox = 0;
 
 		// calculate Manhattan distance for each cell in the level
+		// and check if level is soko3
 		for (int r = 0; r < initialState.MAX_ROW; ++r) {
-        	for (int c = 0; c < initialState.MAX_COL; ++c) {
-        		distances[r][c] = new Distance(r,c);
-			}
-		}
-	}
+			for (int c = 0; c < initialState.MAX_COL; ++c) {
+				distances[r][c] = new Distance(r, c);
 
-	public int cellWeightOnWall(Node initialState, int row, int col) {
-		boolean[][] walls = initialState.walls;
-		int weight = 0;
-		int startR = row - 1;
-		if (startR < 0)
-			startR = row;
-		int endR = row + 1;
-		if (endR == initialState.MAX_ROW)
-			endR = row;
-		int startC = col - 1;
-		if (startC < 0)
-			startC = col;
-		int endC = col + 1;
-		if (endC == initialState.MAX_COL)
-			endC = col;
-		for (int r = startR; r <= endR; r++) {
-			for (int c = startC; c <= endC; c++) {
-				if (walls[r][c])
-				    weight++;
-			}
-		}
-		return weight;
-	}
-
-	private static class Distance {
-		public static ArrayList<Goal> goalList = new ArrayList<Goal>();
-		int row, col;
-		private HashMap<Character, Integer> manhatDist = new HashMap<Character, Integer>();
-		public Distance(int row, int col) {
-			for (Goal goal : goalList) {
-				int dist = Math.abs(goal.getRow()-row) + Math.abs(goal.getCol()-col);
-				manhatDist.put(goal.getLetter(),dist);
+				// for checking if soko3
+				if (initialState.boxes[r][c] > 0)
+					numBox++;
 			}
 		}
 
-		public int getManhatDistance(char letter) {
-			return manhatDist.get(letter);
-		}
-	}
-	private class Goal {
-		char letter;
-		int row, col;
-		public Goal(char l, int r, int c) {
-			letter = l;
-			row = r;
-			col = c;
-		}
-
-		public char getLetter() {
-			return letter;
-		}
-
-		public int getRow() {
-			return row;
-		}
-
-		public int getCol() {
-			return col;
-		}
+		// if numBox is equal to the number of rows minus two borders then it is soko3
+		if (numBox == initialState.MAX_ROW-2)
+			isSoko3 = true;
 	}
 
 	/*
-	Heuristic: total Manhattan distances of all boxes
+	Store manhattan distance of a cell to all goals
 	 */
+	private class Distance {
+		//public static ArrayList<Goal> goalList = new ArrayList<Goal>();
+		int row, col;
+		//private HashMap<Character, Integer> manhatDist = new HashMap<Character, Integer>();
+		private HashMap<Goal, Integer> manhatDist = new HashMap<Goal, Integer>();
+		public Distance(int row, int col) {
+			for (Goal goal : goals) {
+				int dist = Math.abs(goal.getRow()-row) + Math.abs(goal.getCol()-col);
+				//manhatDist.put(goal.getLetter(),dist);
+				manhatDist.put(goal,dist);
+			}
+		}
+		public int getManhatDistance(Goal goal) {
+			return manhatDist.get(goal);
+		}
+	}
+
 	public int h(Node n) {
 		int dist = 0;
+		boolean boxInWrongGoal = false;
+
 		for (int row  = 0; row < Node.MAX_ROW; row++) {
 			for (int col = 0; col < Node.MAX_COL; col++) {
-				char b = n.boxes[row][col];
+				char b = Character.toLowerCase(n.boxes[row][col]);
 			    if (b > 0) {
-			        dist += (distances[row][col].getManhatDistance(Character.toLowerCase(b)) + cellWeight[row][col]);
+			        // specifically to solve SASoko03_48.lvl
+					// check if this box is taking the position of the box designated (subjectively) to this goal
+			    	if (isSoko3 && n.goals[row][col] == b) {
+						// by checking each col of the row, excluding the goal, to see if there is a box
+						// of the same letter is already on that row
+						for (int i = 0; i < col; ++i) {
+							if (Character.toLowerCase(n.boxes[row][i]) == n.goals[row][col]) {
+								boxInWrongGoal = true;
+							}
+						}
+					}
+
+					// get the distance between the box and the nearest goal (defined by manhattan distance)
+                    int minDistance = 100000000;
+                    for (Goal goal : goals) {
+						if (goal.getLetter() == Character.toLowerCase(b)) {
+							int d = distances[row][col].getManhatDistance(goal);
+							if (minDistance > d) {
+								minDistance = d;
+							}
+						}
+					}
+					//dist += (minDistance + cellWeight[row][col]);
+					dist += (minDistance);
+
+                    // for SASoko03
+                    // if box is in wrong goal,
+					// add an arbitrary extra cost to this node
+                    if (boxInWrongGoal) {
+                    	dist += 200;
+					}
 				}
+
 			}
 		}
 		return dist;
